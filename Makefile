@@ -1,4 +1,4 @@
-CCFLAGS = $(shell pkg-config --cflags glfw3 glew)
+CCFLAGS = -g -Wall -Werror -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM $(shell pkg-config --cflags glfw3 glew)
 LDFLAGS = $(shell pkg-config --libs glfw3 glew) -lJolt
 
 all: tumble
@@ -10,4 +10,4 @@ clean:
 	rm -f tumble *.o
 
 .cc.o:
-	g++ -c -g -Wall -Werror $(CCFLAGS) -o $@ $<
+	g++ -c $(CCFLAGS) -o $@ $<
