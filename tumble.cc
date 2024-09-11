@@ -31,6 +31,11 @@ int main(void)
   TempAllocatorMalloc allocator;
   JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
 
+  const uint cMaxBodies = 1024;
+  const uint cNumBodyMutexes = 0;
+  const uint cMaxBodyPairs = 1024;
+  const uint cMaxContactConstraints = 1024;
+
   UnregisterTypes();
   delete Factory::sInstance;
   Factory::sInstance = nullptr;
