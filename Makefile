@@ -1,5 +1,5 @@
-CCFLAGS = -DEIGEN_MAX_ALIGN_BYTES=32 $(shell pkg-config --cflags glfw3 glew)
-LDFLAGS = $(shell pkg-config --libs glfw3 glew)
+CCFLAGS = $(shell pkg-config --cflags glfw3 glew)
+LDFLAGS = $(shell pkg-config --libs glfw3 glew) -lJolt
 
 all: tumble
 
