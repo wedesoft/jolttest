@@ -91,7 +91,7 @@ int main(void)
   Factory::sInstance = new Factory();
   RegisterTypes();
 
-  TempAllocatorMalloc allocator;
+  TempAllocatorMalloc temp_allocator;
   JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
 
   const uint cMaxBodies = 1024;
@@ -115,11 +115,29 @@ int main(void)
   ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();
   ShapeRefC body_shape = body_shape_result.Get();
   BodyCreationSettings body_settings(body_shape, RVec3(0.0, 0.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+  body_settings.mMaxLinearVelocity = 10000.0f;
+  body_settings.mApplyGyroscopicForce = true;
+  body_settings.mLinearDamping = 0.0f;
+  body_settings.mAngularDamping = 0.0f;
   Body *body = body_interface.CreateBody(body_settings);
   body_interface.AddBody(body->GetID(), EActivation::Activate);
+  body_interface.SetLinearVelocity(body->GetID(), Vec3(0.0f, 0.0f, 0.0f));
+
+	const float cDeltaTime = 1.0f / 60.0f;
+  physics_system.OptimizeBroadPhase();
+
+  uint step = 0;
+  while (body_interface.IsActive(body->GetID())) {
+    ++step;
+    RVec3 position = body_interface.GetCenterOfMassPosition(body->GetID());
+    Vec3 velocity = body_interface.GetLinearVelocity(body->GetID());
+    cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << endl;
+    const int cCollisionSteps = 1;
+    physics_system.Update(cDeltaTime, cCollisionSteps, &temp_allocator, &job_system);
+  }
 
   body_interface.RemoveBody(body->GetID());
-	body_interface.DestroyBody(body->GetID());
+  body_interface.DestroyBody(body->GetID());
 
   UnregisterTypes();
   delete Factory::sInstance;
