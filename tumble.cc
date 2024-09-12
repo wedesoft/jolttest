@@ -8,6 +8,7 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
@@ -104,6 +105,21 @@ int main(void)
   PhysicsSystem physics_system;
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+
+  BodyInterface &body_interface = physics_system.GetBodyInterface();
+  float a = 1.0;
+  float b = 0.1;
+  float c = 0.5;
+  BoxShapeSettings body_shape_settings(Vec3(a, b, c));
+  body_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();
+  ShapeRefC body_shape = body_shape_result.Get();
+  BodyCreationSettings body_settings(body_shape, RVec3(0.0, 0.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+  Body *body = body_interface.CreateBody(body_settings);
+  body_interface.AddBody(body->GetID(), EActivation::Activate);
+
+  body_interface.RemoveBody(body->GetID());
+	body_interface.DestroyBody(body->GetID());
 
   UnregisterTypes();
   delete Factory::sInstance;
