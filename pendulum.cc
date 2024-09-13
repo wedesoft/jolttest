@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdarg>
-#include <thread>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <Jolt/Jolt.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
@@ -12,8 +13,6 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 
 using namespace std;
@@ -50,7 +49,7 @@ class ObjectLayerPairFilterImpl: public ObjectLayerPairFilter
 {
   public:
     virtual bool ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override {
-      return true;
+      return false;
     }
 };
 
@@ -81,7 +80,7 @@ class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
 {
 public:
   virtual bool ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override {
-    return true;
+    return false;
   }
 };
 
@@ -188,7 +187,7 @@ void handleLinkError(const char *step, GLuint program)
 int main(void)
 {
   glfwInit();
-  GLFWwindow *window = glfwCreateWindow(width, height, "Tumbling motion with Jolt Physics", NULL, NULL);
+  GLFWwindow *window = glfwCreateWindow(width, height, "Double pendulum with Project Chrono", NULL, NULL);
   glfwMakeContextCurrent(window);
   glewInit();
 
@@ -243,10 +242,10 @@ int main(void)
   float light[3] = {0.36f, 0.8f, -0.48f};
   glUniform3fv(glGetUniformLocation(program, "light"), 1, light);
   glUniform1f(glGetUniformLocation(program, "aspect"), (float)width / (float)height);
-  float a = 1.0;
-  float b = 0.1;
-  float c = 0.5;
-  float axes[3] = {a, b, c};
+  double a = 0.5;
+  double b = 0.05;
+  double c = 0.05;
+  float axes[3] = {(float)a, (float)b, (float)c};
   glUniform3fv(glGetUniformLocation(program, "axes"), 1, axes);
 
   RegisterDefaultAllocator();
@@ -269,49 +268,46 @@ int main(void)
   PhysicsSystem physics_system;
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
-  physics_system.SetGravity(Vec3::sZero());
-
-  BodyInterface &body_interface = physics_system.GetBodyInterface();
-  BoxShapeSettings body_shape_settings(Vec3(a, b, c));
-  body_shape_settings.SetDensity(1000.0);
-  body_shape_settings.SetEmbedded();
-  ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();
-  ShapeRefC body_shape = body_shape_result.Get();
-  BodyCreationSettings body_settings(body_shape, RVec3(0.0, 0.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-  body_settings.mMaxLinearVelocity = 10000.0;
-  body_settings.mApplyGyroscopicForce = true;
-  body_settings.mLinearDamping = 0.0;
-  body_settings.mAngularDamping = 0.0;
-  Body *body = body_interface.CreateBody(body_settings);
-  body_interface.AddBody(body->GetID(), EActivation::Activate);
-  body_interface.SetLinearVelocity(body->GetID(), Vec3(0.0, 0.0, 0.0));
-  body_interface.SetAngularVelocity(body->GetID(), Vec3(0.3, 0.0, 5.0));
+  physics_system.SetGravity(Vec3(0, -0.4, 0));
 
   physics_system.OptimizeBroadPhase();
 
   double t = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
     double dt = glfwGetTime() - t;
-    RMat44 transform = body_interface.GetWorldTransform(body->GetID());
-    RVec3 position = transform.GetTranslation();
-    Vec3 x = transform.GetAxisX();
-    Vec3 y = transform.GetAxisY();
-    Vec3 z = transform.GetAxisZ();
-    float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)position.GetZ()};
-    glUniform3fv(glGetUniformLocation(program, "translation"), 1, translation);
-    float rotation[9] = {x.GetX(), y.GetX(), z.GetX(), x.GetY(), y.GetY(), z.GetY(), x.GetZ(), y.GetZ(), z.GetZ()};
-    glUniformMatrix3fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rotation);
+
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, (void *)0);
+
+    // for (auto body=sys.GetBodies().begin(); body!=sys.GetBodies().end(); body++) {
+    //   if ((*body)->IsFixed()) continue;
+
+    //   chrono::ChQuaternion quat = (*body)->GetRot();
+    //   chrono::ChMatrix33 mat(quat);
+    //   chrono::ChVector3 x = mat.GetAxisX();
+    //   chrono::ChVector3 y = mat.GetAxisY();
+    //   chrono::ChVector3 z = mat.GetAxisZ();
+
+    //   float rotation[9] = {
+    //     (float)x.x(), (float)y.x(), (float)z.x(),
+    //     (float)x.y(), (float)y.y(), (float)z.y(),
+    //     (float)x.z(), (float)y.z(), (float)z.z()
+    //   };
+
+    //   glUniformMatrix3fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rotation);
+
+    //   chrono::ChVector3 position = (*body)->GetPos();
+    //   float translation[3] = {(float)position.x(), (float)position.y(), (float)position.z()};
+    //   glUniform3fv(glGetUniformLocation(program, "translation"), 1, translation);
+
+    //   glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, (void *)0);
+    // };
+
     glfwSwapBuffers(window);
     glfwPollEvents();
     const int cCollisionSteps = 1;
     physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
     t += dt;
-  }
-
-  body_interface.RemoveBody(body->GetID());
-  body_interface.DestroyBody(body->GetID());
+  };
 
   UnregisterTypes();
   delete Factory::sInstance;
