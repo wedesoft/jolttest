@@ -111,19 +111,20 @@ int main(void)
   float b = 0.1;
   float c = 0.5;
   BoxShapeSettings body_shape_settings(Vec3(a, b, c));
+  body_shape_settings.SetDensity(1000.0);
   body_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();
   ShapeRefC body_shape = body_shape_result.Get();
   BodyCreationSettings body_settings(body_shape, RVec3(0.0, 0.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-  body_settings.mMaxLinearVelocity = 10000.0f;
+  body_settings.mMaxLinearVelocity = 10000.0;
   body_settings.mApplyGyroscopicForce = true;
-  body_settings.mLinearDamping = 0.0f;
-  body_settings.mAngularDamping = 0.0f;
+  body_settings.mLinearDamping = 0.0;
+  body_settings.mAngularDamping = 0.0;
   Body *body = body_interface.CreateBody(body_settings);
   body_interface.AddBody(body->GetID(), EActivation::Activate);
-  body_interface.SetLinearVelocity(body->GetID(), Vec3(0.0f, 0.0f, 0.0f));
+  body_interface.SetLinearVelocity(body->GetID(), Vec3(0.0, 0.0, 0.0));
 
-	const float cDeltaTime = 1.0f / 60.0f;
+  const double cDeltaTime = 1.0 / 60.0;
   physics_system.OptimizeBroadPhase();
 
   uint step = 0;
