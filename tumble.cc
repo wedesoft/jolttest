@@ -270,8 +270,8 @@ int main(void)
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
   physics_system.SetGravity(Vec3::sZero());
-
   BodyInterface &body_interface = physics_system.GetBodyInterface();
+
   BoxShapeSettings body_shape_settings(Vec3(a, b, c));
   body_shape_settings.SetDensity(1000.0);
   body_shape_settings.SetEmbedded();

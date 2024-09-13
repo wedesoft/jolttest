@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstdarg>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <thread>
 #include <Jolt/Jolt.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
@@ -13,6 +12,9 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 
 using namespace std;
@@ -242,9 +244,9 @@ int main(void)
   float light[3] = {0.36f, 0.8f, -0.48f};
   glUniform3fv(glGetUniformLocation(program, "light"), 1, light);
   glUniform1f(glGetUniformLocation(program, "aspect"), (float)width / (float)height);
-  double a = 0.5;
-  double b = 0.05;
-  double c = 0.05;
+  float a = 0.5;
+  float b = 0.1;
+  float c = 0.1;
   float axes[3] = {(float)a, (float)b, (float)c};
   glUniform3fv(glGetUniformLocation(program, "axes"), 1, axes);
 
@@ -269,6 +271,53 @@ int main(void)
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
   physics_system.SetGravity(Vec3(0, -0.4, 0));
+  BodyInterface &body_interface = physics_system.GetBodyInterface();
+
+  BoxShapeSettings base_shape_settings(Vec3(0.1, 0.1, 0.1));
+  base_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult base_shape_result = base_shape_settings.Create();
+  ShapeRefC base_shape = base_shape_result.Get();
+  BodyCreationSettings base_settings(base_shape, RVec3(0.0, 0.5, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::MOVING);
+  Body *base = body_interface.CreateBody(base_settings);
+  body_interface.AddBody(base->GetID(), EActivation::DontActivate);
+
+  vector<Body *> pendulum;
+
+  BoxShapeSettings upper_shape_settings(Vec3(a, b, c));
+  upper_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult upper_shape_result = upper_shape_settings.Create();
+  ShapeRefC upper_shape = upper_shape_result.Get();
+  BodyCreationSettings upper_settings(upper_shape, RVec3(0.5 * a, 0.5, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+  upper_settings.mApplyGyroscopicForce = true;
+  upper_settings.mLinearDamping = 0.0;
+  upper_settings.mAngularDamping = 0.0;
+  Body *upper = body_interface.CreateBody(upper_settings);
+  body_interface.AddBody(upper->GetID(), EActivation::Activate);
+  pendulum.push_back(upper);
+
+  BoxShapeSettings lower_shape_settings(Vec3(a, b, c));
+  lower_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult lower_shape_result = lower_shape_settings.Create();
+  ShapeRefC lower_shape = lower_shape_result.Get();
+  BodyCreationSettings lower_settings(lower_shape, RVec3(1.5 * a, 0.5, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+  lower_settings.mApplyGyroscopicForce = true;
+  lower_settings.mLinearDamping = 0.0;
+  lower_settings.mAngularDamping = 0.0;
+  Body *lower = body_interface.CreateBody(lower_settings);
+  body_interface.AddBody(lower->GetID(), EActivation::Activate);
+  pendulum.push_back(lower);
+
+  HingeConstraintSettings hinge1;
+  hinge1.mPoint1 = hinge1.mPoint2 = RVec3(0.0, 0.5, 0);
+  hinge1.mHingeAxis1 = hinge1.mHingeAxis2 = Vec3::sAxisZ();
+  hinge1.mNormalAxis1 = hinge1.mNormalAxis2 = Vec3::sAxisY();
+  physics_system.AddConstraint(hinge1.Create(*base, *upper));
+
+  HingeConstraintSettings hinge2;
+  hinge2.mPoint1 = hinge2.mPoint2 = RVec3(a, 0.5, 0);
+  hinge2.mHingeAxis1 = hinge2.mHingeAxis2 = Vec3::sAxisZ();
+  hinge2.mNormalAxis1 = hinge2.mNormalAxis2 = Vec3::sAxisY();
+  physics_system.AddConstraint(hinge2.Create(*upper, *lower));
 
   physics_system.OptimizeBroadPhase();
 
@@ -278,36 +327,30 @@ int main(void)
 
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-    // for (auto body=sys.GetBodies().begin(); body!=sys.GetBodies().end(); body++) {
-    //   if ((*body)->IsFixed()) continue;
-
-    //   chrono::ChQuaternion quat = (*body)->GetRot();
-    //   chrono::ChMatrix33 mat(quat);
-    //   chrono::ChVector3 x = mat.GetAxisX();
-    //   chrono::ChVector3 y = mat.GetAxisY();
-    //   chrono::ChVector3 z = mat.GetAxisZ();
-
-    //   float rotation[9] = {
-    //     (float)x.x(), (float)y.x(), (float)z.x(),
-    //     (float)x.y(), (float)y.y(), (float)z.y(),
-    //     (float)x.z(), (float)y.z(), (float)z.z()
-    //   };
-
-    //   glUniformMatrix3fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rotation);
-
-    //   chrono::ChVector3 position = (*body)->GetPos();
-    //   float translation[3] = {(float)position.x(), (float)position.y(), (float)position.z()};
-    //   glUniform3fv(glGetUniformLocation(program, "translation"), 1, translation);
-
-    //   glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, (void *)0);
-    // };
+    for (auto body=pendulum.begin(); body!=pendulum.end(); body++) {
+      RMat44 transform = body_interface.GetWorldTransform((*body)->GetID());
+      RVec3 position = transform.GetTranslation();
+      Vec3 x = transform.GetAxisX();
+      Vec3 y = transform.GetAxisY();
+      Vec3 z = transform.GetAxisZ();
+      float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)position.GetZ()};
+      glUniform3fv(glGetUniformLocation(program, "translation"), 1, translation);
+      float rotation[9] = {x.GetX(), y.GetX(), z.GetX(), x.GetY(), y.GetY(), z.GetY(), x.GetZ(), y.GetZ(), z.GetZ()};
+      glUniformMatrix3fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rotation);
+      glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, (void *)0);
+    };
 
     glfwSwapBuffers(window);
     glfwPollEvents();
     const int cCollisionSteps = 1;
+    body_interface.ActivateBody(upper->GetID());
     physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
     t += dt;
   };
+
+  body_interface.RemoveBody(base->GetID());
+  body_interface.DestroyBody(upper->GetID());
+  body_interface.DestroyBody(lower->GetID());
 
   UnregisterTypes();
   delete Factory::sInstance;
