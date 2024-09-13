@@ -105,6 +105,7 @@ int main(void)
   PhysicsSystem physics_system;
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+  physics_system.SetGravity(Vec3::sZero());
 
   BodyInterface &body_interface = physics_system.GetBodyInterface();
   float a = 1.0;
@@ -123,6 +124,7 @@ int main(void)
   Body *body = body_interface.CreateBody(body_settings);
   body_interface.AddBody(body->GetID(), EActivation::Activate);
   body_interface.SetLinearVelocity(body->GetID(), Vec3(0.0, 0.0, 0.0));
+  body_interface.SetAngularVelocity(body->GetID(), Vec3(0.3, 0.0, 5.0));
 
   const double cDeltaTime = 1.0 / 60.0;
   physics_system.OptimizeBroadPhase();
@@ -130,9 +132,15 @@ int main(void)
   uint step = 0;
   while (body_interface.IsActive(body->GetID())) {
     ++step;
-    RVec3 position = body_interface.GetCenterOfMassPosition(body->GetID());
-    Vec3 velocity = body_interface.GetLinearVelocity(body->GetID());
-    cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << endl;
+    RMat44 transform = body_interface.GetWorldTransform(body->GetID());
+    RVec3 position = transform.GetTranslation();
+    Vec3 x = transform.GetAxisX();
+    Vec3 y = transform.GetAxisY();
+    Vec3 z = transform.GetAxisZ();
+    cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << ")" << endl;
+    cout << x.GetX() << ", " << y.GetX() << ", " << z.GetX() << endl
+         << x.GetY() << ", " << y.GetY() << ", " << z.GetY() << endl
+         << x.GetZ() << ", " << y.GetZ() << ", " << z.GetZ() << endl;
     const int cCollisionSteps = 1;
     physics_system.Update(cDeltaTime, cCollisionSteps, &temp_allocator, &job_system);
   }
