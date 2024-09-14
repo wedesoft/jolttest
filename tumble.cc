@@ -273,6 +273,7 @@ int main(void)
   BodyInterface &body_interface = physics_system.GetBodyInterface();
 
   BoxShapeSettings body_shape_settings(Vec3(a, b, c));
+  body_shape_settings.mConvexRadius = 0.01;
   body_shape_settings.SetDensity(1000.0);
   body_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();

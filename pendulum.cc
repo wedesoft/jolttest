@@ -245,8 +245,8 @@ int main(void)
   glUniform3fv(glGetUniformLocation(program, "light"), 1, light);
   glUniform1f(glGetUniformLocation(program, "aspect"), (float)width / (float)height);
   float a = 0.5;
-  float b = 0.1;
-  float c = 0.1;
+  float b = 0.05;
+  float c = 0.05;
   float axes[3] = {(float)a, (float)b, (float)c};
   glUniform3fv(glGetUniformLocation(program, "axes"), 1, axes);
 
@@ -274,6 +274,7 @@ int main(void)
   BodyInterface &body_interface = physics_system.GetBodyInterface();
 
   BoxShapeSettings base_shape_settings(Vec3(0.1, 0.1, 0.1));
+  base_shape_settings.mConvexRadius = 0.01;
   base_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult base_shape_result = base_shape_settings.Create();
   ShapeRefC base_shape = base_shape_result.Get();
@@ -284,6 +285,7 @@ int main(void)
   vector<Body *> pendulum;
 
   BoxShapeSettings upper_shape_settings(Vec3(a, b, c));
+  upper_shape_settings.mConvexRadius = 0.01;
   upper_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult upper_shape_result = upper_shape_settings.Create();
   ShapeRefC upper_shape = upper_shape_result.Get();
@@ -296,6 +298,7 @@ int main(void)
   pendulum.push_back(upper);
 
   BoxShapeSettings lower_shape_settings(Vec3(a, b, c));
+  lower_shape_settings.mConvexRadius = 0.01;
   lower_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult lower_shape_result = lower_shape_settings.Create();
   ShapeRefC lower_shape = lower_shape_result.Get();
@@ -348,9 +351,12 @@ int main(void)
     t += dt;
   };
 
+  body_interface.RemoveBody(upper->GetID());
+  body_interface.RemoveBody(lower->GetID());
   body_interface.RemoveBody(base->GetID());
   body_interface.DestroyBody(upper->GetID());
   body_interface.DestroyBody(lower->GetID());
+  body_interface.DestroyBody(base->GetID());
 
   UnregisterTypes();
   delete Factory::sInstance;
