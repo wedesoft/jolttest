@@ -12,7 +12,8 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -51,7 +52,7 @@ class ObjectLayerPairFilterImpl: public ObjectLayerPairFilter
 {
   public:
     virtual bool ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override {
-      return false;
+      return true;
     }
 };
 
@@ -82,7 +83,7 @@ class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
 {
 public:
   virtual bool ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override {
-    return false;
+    return true;
   }
 };
 
@@ -189,7 +190,7 @@ void handleLinkError(const char *step, GLuint program)
 int main(void)
 {
   glfwInit();
-  GLFWwindow *window = glfwCreateWindow(width, height, "Double pendulum with Jolt Physics", NULL, NULL);
+  GLFWwindow *window = glfwCreateWindow(width, height, "Suspension simulation with Jolt Physics", NULL, NULL);
   glfwMakeContextCurrent(window);
   glewInit();
 
@@ -244,10 +245,10 @@ int main(void)
   float light[3] = {0.36f, 0.8f, -0.48f};
   glUniform3fv(glGetUniformLocation(program, "light"), 1, light);
   glUniform1f(glGetUniformLocation(program, "aspect"), (float)width / (float)height);
-  float a = 0.5;
-  float b = 0.05;
-  float c = 0.05;
-  float axes[3] = {(float)a, (float)b, (float)c};
+  float a = 0.1;
+  float b = 0.1;
+  float c = 0.1;
+  float axes[3] = {a, b, c};
   glUniform3fv(glGetUniformLocation(program, "axes"), 1, axes);
 
   RegisterDefaultAllocator();
@@ -273,65 +274,58 @@ int main(void)
   physics_system.SetGravity(Vec3(0, -0.4, 0));
   BodyInterface &body_interface = physics_system.GetBodyInterface();
 
-  BoxShapeSettings base_shape_settings(Vec3(0.1, 0.1, 0.1));
-  base_shape_settings.mConvexRadius = 0.01;
-  base_shape_settings.SetEmbedded();
-  ShapeSettings::ShapeResult base_shape_result = base_shape_settings.Create();
-  ShapeRefC base_shape = base_shape_result.Get();
-  BodyCreationSettings base_settings(base_shape, RVec3(0.0, 0.5, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::MOVING);
-  Body *base = body_interface.CreateBody(base_settings);
-  body_interface.AddBody(base->GetID(), EActivation::DontActivate);
+  vector<Body *> boxes;
 
-  vector<Body *> pendulum;
+  for (int i=0; i<2; i++) {
+    BoxShapeSettings body_shape_settings(Vec3(0.5 * a, 0.5 * b, 0.5 * c));
+    body_shape_settings.mConvexRadius = 0.01;
+    body_shape_settings.SetDensity(1000.0);
+    body_shape_settings.SetEmbedded();
+    ShapeSettings::ShapeResult body_shape_result = body_shape_settings.Create();
+    ShapeRefC body_shape = body_shape_result.Get();
+    BodyCreationSettings body_settings(body_shape, RVec3(0.0, i * 0.4, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+    body_settings.mApplyGyroscopicForce = true;
+    body_settings.mLinearDamping = 0.0;
+    body_settings.mAngularDamping = 0.0;
+    Body *body = body_interface.CreateBody(body_settings);
+    body->SetFriction(0.5);
+    body->SetRestitution(0.3);
+    body_interface.AddBody(body->GetID(), EActivation::Activate);
+    boxes.push_back(body);
+  };
 
-  BoxShapeSettings upper_shape_settings(Vec3(a, b, c));
-  upper_shape_settings.mConvexRadius = 0.01;
-  upper_shape_settings.SetEmbedded();
-  ShapeSettings::ShapeResult upper_shape_result = upper_shape_settings.Create();
-  ShapeRefC upper_shape = upper_shape_result.Get();
-  BodyCreationSettings upper_settings(upper_shape, RVec3(0.5 * a, 0.5, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-  upper_settings.mApplyGyroscopicForce = true;
-  upper_settings.mLinearDamping = 0.0;
-  upper_settings.mAngularDamping = 0.0;
-  Body *upper = body_interface.CreateBody(upper_settings);
-  body_interface.AddBody(upper->GetID(), EActivation::Activate);
-  pendulum.push_back(upper);
+  SliderConstraintSettings slider_settings;
+  slider_settings.mAutoDetectPoint = true;
+  slider_settings.SetSliderAxis(Vec3::sAxisY());
+  physics_system.AddConstraint(slider_settings.Create(*boxes[0], *boxes[1]));
 
-  BoxShapeSettings lower_shape_settings(Vec3(a, b, c));
-  lower_shape_settings.mConvexRadius = 0.01;
-  lower_shape_settings.SetEmbedded();
-  ShapeSettings::ShapeResult lower_shape_result = lower_shape_settings.Create();
-  ShapeRefC lower_shape = lower_shape_result.Get();
-  BodyCreationSettings lower_settings(lower_shape, RVec3(1.5 * a, 0.5, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-  lower_settings.mApplyGyroscopicForce = true;
-  lower_settings.mLinearDamping = 0.0;
-  lower_settings.mAngularDamping = 0.0;
-  Body *lower = body_interface.CreateBody(lower_settings);
-  body_interface.AddBody(lower->GetID(), EActivation::Activate);
-  pendulum.push_back(lower);
+  DistanceConstraintSettings distance_settings;
+  distance_settings.mPoint1 = RVec3(0.0, 0.0, 0.0);
+  distance_settings.mPoint2 = RVec3(0.0, 0.4, 0.0);
+  distance_settings.mLimitsSpringSettings.mDamping = 0.1f;
+  distance_settings.mLimitsSpringSettings.mStiffness = 1.0f;
+  physics_system.AddConstraint(distance_settings.Create(*boxes[0], *boxes[1]));
 
-  HingeConstraintSettings hinge1;
-  hinge1.mPoint1 = hinge1.mPoint2 = RVec3(0.0, 0.5, 0);
-  hinge1.mHingeAxis1 = hinge1.mHingeAxis2 = Vec3::sAxisZ();
-  hinge1.mNormalAxis1 = hinge1.mNormalAxis2 = Vec3::sAxisY();
-  physics_system.AddConstraint(hinge1.Create(*base, *upper));
-
-  HingeConstraintSettings hinge2;
-  hinge2.mPoint1 = hinge2.mPoint2 = RVec3(a, 0.5, 0);
-  hinge2.mHingeAxis1 = hinge2.mHingeAxis2 = Vec3::sAxisZ();
-  hinge2.mNormalAxis1 = hinge2.mNormalAxis2 = Vec3::sAxisY();
-  physics_system.AddConstraint(hinge2.Create(*upper, *lower));
+  BoxShapeSettings ground_shape_settings(Vec3(3.0, 0.1, 3.0));
+  ground_shape_settings.mConvexRadius = 0.01;
+  ground_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult ground_shape_result = ground_shape_settings.Create();
+  ShapeRefC ground_shape = ground_shape_result.Get();
+  BodyCreationSettings ground_settings(ground_shape, RVec3(0.0, -0.5, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::MOVING);
+  Body *ground = body_interface.CreateBody(ground_settings);
+  ground->SetFriction(0.5);
+  body_interface.AddBody(ground->GetID(), EActivation::DontActivate);
 
   physics_system.OptimizeBroadPhase();
 
   double t = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
     double dt = glfwGetTime() - t;
-
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-    for (auto body=pendulum.begin(); body!=pendulum.end(); body++) {
-      RMat44 transform = body_interface.GetWorldTransform((*body)->GetID());
+    for (int i=0; i<2; i++) {
+      Body *body = boxes[i];
+      body_interface.ActivateBody(body->GetID());
+      RMat44 transform = body_interface.GetWorldTransform(body->GetID());
       RVec3 position = transform.GetTranslation();
       Vec3 x = transform.GetAxisX();
       Vec3 y = transform.GetAxisY();
@@ -342,21 +336,18 @@ int main(void)
       glUniformMatrix3fv(glGetUniformLocation(program, "rotation"), 1, GL_TRUE, rotation);
       glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, (void *)0);
     };
-
     glfwSwapBuffers(window);
     glfwPollEvents();
     const int cCollisionSteps = 1;
-    body_interface.ActivateBody(upper->GetID());
     physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
     t += dt;
-  };
+  }
 
-  body_interface.RemoveBody(upper->GetID());
-  body_interface.RemoveBody(lower->GetID());
-  body_interface.RemoveBody(base->GetID());
-  body_interface.DestroyBody(upper->GetID());
-  body_interface.DestroyBody(lower->GetID());
-  body_interface.DestroyBody(base->GetID());
+  for (int i=0; i<2; i++) {
+    Body *body = boxes[i];
+    body_interface.RemoveBody(body->GetID());
+    body_interface.DestroyBody(body->GetID());
+  };
 
   UnregisterTypes();
   delete Factory::sInstance;
