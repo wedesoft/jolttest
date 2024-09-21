@@ -1,7 +1,7 @@
 CCFLAGS = -g -fPIC -Wall -Werror -DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM -DJPH_DOUBLE_PRECISION $(shell pkg-config --cflags glfw3 glew)
 LDFLAGS = -flto=auto $(shell pkg-config --libs glfw3 glew) -lJolt
 
-all: tumble pendulum stack suspension
+all: tumble pendulum stack suspension vehicle
 
 tumble: tumble.o
 	g++ -o $@ $^ $(LDFLAGS)
@@ -15,8 +15,11 @@ stack: stack.o
 suspension: suspension.o
 	g++ -o $@ $^ $(LDFLAGS)
 
+vehicle: vehicle.o
+	g++ -o $@ $^ $(LDFLAGS)
+
 clean:
-	rm -f tumble pendulum stack suspension *.o
+	rm -f tumble pendulum stack suspension vehicle *.o
 
 .cc.o:
 	g++ -c $(CCFLAGS) -o $@ $<
