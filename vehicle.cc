@@ -89,6 +89,8 @@ public:
 
 int main(void)
 {
+  glfwInit();
+
   RegisterDefaultAllocator();
   Trace = TraceImpl;
   JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
@@ -177,7 +179,7 @@ int main(void)
     body_interface.ActivateBody(c->GetVehicleBody()->GetID());
     RMat44 transform = body_interface.GetWorldTransform(car_body->GetID());
     RVec3 position = transform.GetTranslation();
-    cout << position.GetX() << " " << position.GetY() << " " << position.GetZ() << endl;
+    cout << dt << " " << position.GetX() << " " << position.GetY() << " " << position.GetZ() << endl;
     const int cCollisionSteps = 1;
     physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
     t += dt;
@@ -191,5 +193,6 @@ int main(void)
   delete Factory::sInstance;
   Factory::sInstance = nullptr;
 
+  glfwTerminate();
   return 0;
 }
