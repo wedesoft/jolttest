@@ -12,6 +12,8 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -108,6 +110,57 @@ int main(void)
   physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface,
                       object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
   physics_system.SetGravity(Vec3(0, -0.4, 0));
+  BodyInterface &body_interface = physics_system.GetBodyInterface();
+
+  BoxShapeSettings ground_shape_settings(Vec3(3.0, 0.1, 3.0));
+  ground_shape_settings.mConvexRadius = 0.01;
+  ground_shape_settings.SetEmbedded();
+  ShapeSettings::ShapeResult ground_shape_result = ground_shape_settings.Create();
+  ShapeRefC ground_shape = ground_shape_result.Get();
+  BodyCreationSettings ground_settings(ground_shape, RVec3(0.0, -0.5, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::MOVING);
+  Body *ground = body_interface.CreateBody(ground_settings);
+  ground->SetFriction(0.5);
+  body_interface.AddBody(ground->GetID(), EActivation::DontActivate);
+
+	const float wheel_radius = 0.03f;
+	const float wheel_width = 0.02f;
+	const float half_vehicle_length = 0.15f;
+	const float half_vehicle_width = 0.1f;
+	const float half_vehicle_height = 0.02f;
+	const float max_steering_angle = DegreesToRadians(30.0f);
+
+	RefConst<Shape> car_shape = new BoxShape(Vec3(half_vehicle_length, half_vehicle_height, half_vehicle_width));
+	BodyCreationSettings car_body_settings(car_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+	car_body_settings.mMassPropertiesOverride.mMass = 10.0f;
+
+	VehicleConstraintSettings vehicle;
+
+	WheelSettingsWV *w1 = new WheelSettingsWV;
+	w1->mPosition = Vec3(half_vehicle_length - 2.0f * wheel_radius, -0.9f * half_vehicle_height, 0.0f);
+	w1->mMaxSteerAngle = max_steering_angle;
+	w1->mMaxHandBrakeTorque = 0.0f;
+  w1->mRadius = wheel_radius;
+  w1->mWidth = wheel_width;
+
+	WheelSettingsWV *w2 = new WheelSettingsWV;
+	w2->mPosition = Vec3(-half_vehicle_length + 2.0f * wheel_radius, -0.9f * half_vehicle_height, half_vehicle_width);
+	w2->mMaxSteerAngle = 0.0f;
+  w2->mRadius = wheel_radius;
+  w2->mWidth = wheel_width;
+
+	WheelSettingsWV *w3 = new WheelSettingsWV;
+	w3->mPosition = Vec3(-half_vehicle_length + 2.0f * wheel_radius, -0.9f * half_vehicle_height, -half_vehicle_width);
+	w3->mMaxSteerAngle = 0.0f;
+  w3->mRadius = wheel_radius;
+  w3->mWidth = wheel_width;
+
+  vehicle.mWheels = {w1, w2, w3};
+
+	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
+	vehicle.mController = controller;
+
+  body_interface.RemoveBody(ground->GetID());
 
   UnregisterTypes();
   delete Factory::sInstance;
