@@ -113,7 +113,7 @@ int main(void)
   BodyInterface &body_interface = physics_system.GetBodyInterface();
 
   BoxShapeSettings ground_shape_settings(Vec3(3.0, 0.1, 3.0));
-  ground_shape_settings.mConvexRadius = 0.01;
+  ground_shape_settings.mConvexRadius = 0.001;
   ground_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult ground_shape_result = ground_shape_settings.Create();
   ShapeRefC ground_shape = ground_shape_result.Get();
@@ -160,6 +160,31 @@ int main(void)
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
 	vehicle.mController = controller;
 
+  Body *car_body = body_interface.CreateBody(car_body_settings);
+  body_interface.AddBody(car_body->GetID(), EActivation::Activate);
+  VehicleConstraint *c = new VehicleConstraint(*car_body, vehicle);
+  VehicleCollisionTester *tester = new VehicleCollisionTesterRay(Layers::MOVING);
+  c->SetVehicleCollisionTester(tester);
+  physics_system.AddConstraint(c);
+  physics_system.AddStepListener(c);
+
+  WheeledVehicleController *vehicle_controller = static_cast<WheeledVehicleController *>(c->GetController());
+  vehicle_controller->SetDriverInput(0.0f, 0.0f, 0.0f, 0.0f);
+
+  double t = glfwGetTime();
+  while (true) {
+    double dt = glfwGetTime() - t;
+    body_interface.ActivateBody(c->GetVehicleBody()->GetID());
+    RMat44 transform = body_interface.GetWorldTransform(car_body->GetID());
+    RVec3 position = transform.GetTranslation();
+    cout << position.GetX() << " " << position.GetY() << " " << position.GetZ() << endl;
+    const int cCollisionSteps = 1;
+    physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
+    t += dt;
+  }
+
+  // destruct
+  body_interface.RemoveBody(car_body->GetID());
   body_interface.RemoveBody(ground->GetID());
 
   UnregisterTypes();
