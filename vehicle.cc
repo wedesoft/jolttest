@@ -100,8 +100,8 @@ in vec3 normal;\n\
 out vec3 n;\n\
 void main()\n\
 {\n\
-  n = rotation * normal;\n\
-  gl_Position = vec4((rotation * (point * axes) + translation) * vec3(1, aspect, 1), 1);\n\
+  n = (rotation * normal).zyx;\n\
+  gl_Position = vec4((rotation * (point * axes) + translation) * vec3(1, aspect, 1).zyx, 1);\n\
 }";
 
 const char *fragmentSource = "#version 410 core\n\
