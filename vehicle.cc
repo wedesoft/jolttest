@@ -242,12 +242,12 @@ int main(void)
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
-	const float wheel_radius = 0.03f;
-	const float wheel_width = 0.02f;
-	const float half_vehicle_length = 0.15f;
-	const float half_vehicle_width = 0.1f;
-	const float half_vehicle_height = 0.02f;
-	const float max_steering_angle = DegreesToRadians(30.0f);
+  const float wheel_radius = 0.03f;
+  const float wheel_width = 0.02f;
+  const float half_vehicle_length = 0.15f;
+  const float half_vehicle_width = 0.1f;
+  const float half_vehicle_height = 0.02f;
+  const float max_steering_angle = DegreesToRadians(30.0f);
 
   float light[3] = {0.36f, 0.8f, -0.48f};
   glUniform3fv(glGetUniformLocation(program, "light"), 1, light);
@@ -292,36 +292,42 @@ int main(void)
   ground->SetRestitution(0.3f);
   body_interface.AddBody(ground->GetID(), EActivation::DontActivate);
 
-	RefConst<Shape> car_shape = new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length));
-	BodyCreationSettings car_body_settings(car_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
-	car_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
+  RefConst<Shape> car_shape = new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length));
+  BodyCreationSettings car_body_settings(car_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+  car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+  car_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
 
-	VehicleConstraintSettings vehicle;
+  VehicleConstraintSettings vehicle;
 
-	WheelSettingsWV *w1 = new WheelSettingsWV;
-	w1->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
-	w1->mMaxSteerAngle = max_steering_angle;
-	w1->mMaxHandBrakeTorque = 0.0f;
+  WheelSettingsWV *w1 = new WheelSettingsWV;
+  w1->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
+  w1->mSuspensionMinLength = wheel_radius;
+  w1->mSuspensionMaxLength = 2 * wheel_radius;
+  w1->mMaxSteerAngle = max_steering_angle;
+  w1->mMaxHandBrakeTorque = 0.0f;
   w1->mRadius = wheel_radius;
   w1->mWidth = wheel_width;
 
-	WheelSettingsWV *w2 = new WheelSettingsWV;
-	w2->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
-	w2->mMaxSteerAngle = 0.0f;
+  WheelSettingsWV *w2 = new WheelSettingsWV;
+  w2->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+  w2->mSuspensionMinLength = wheel_radius;
+  w2->mSuspensionMaxLength = 2 * wheel_radius;
+  w2->mMaxSteerAngle = 0.0f;
   w2->mRadius = wheel_radius;
   w2->mWidth = wheel_width;
 
-	WheelSettingsWV *w3 = new WheelSettingsWV;
-	w3->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
-	w3->mMaxSteerAngle = 0.0f;
+  WheelSettingsWV *w3 = new WheelSettingsWV;
+  w3->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+  w3->mSuspensionMinLength = wheel_radius;
+  w3->mSuspensionMaxLength = 2 * wheel_radius;
+  w3->mMaxSteerAngle = 0.0f;
   w3->mRadius = wheel_radius;
   w3->mWidth = wheel_width;
 
   vehicle.mWheels = {w1, w2, w3};
 
-	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
-	vehicle.mController = controller;
+  WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
+  vehicle.mController = controller;
 
   Body *car_body = body_interface.CreateBody(car_body_settings);
   body_interface.AddBody(car_body->GetID(), EActivation::Activate);
