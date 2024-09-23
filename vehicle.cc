@@ -375,6 +375,8 @@ int main(void)
   BodyCreationSettings car_body_settings(car_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
   car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
   car_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
+  car_body_settings.mLinearDamping = 0.0;
+  car_body_settings.mAngularDamping = 0.0;
 
   VehicleConstraintSettings vehicle;
 
@@ -382,6 +384,7 @@ int main(void)
   w1->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, half_vehicle_length - 1.0f * wheel_radius);
   w1->mSuspensionMinLength = wheel_radius;
   w1->mSuspensionMaxLength = 2 * wheel_radius;
+  w1->mAngularDamping = 0.0f;
   w1->mMaxSteerAngle = max_steering_angle;
   w1->mMaxHandBrakeTorque = 0.0f;
   w1->mRadius = wheel_radius;
@@ -391,6 +394,7 @@ int main(void)
   w2->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 1.0f * wheel_radius);
   w2->mSuspensionMinLength = wheel_radius;
   w2->mSuspensionMaxLength = 2 * wheel_radius;
+  w2->mAngularDamping = 0.0f;
   w2->mMaxSteerAngle = 0.0f;
   w2->mRadius = wheel_radius;
   w2->mWidth = wheel_width;
@@ -399,6 +403,7 @@ int main(void)
   w3->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 1.0f * wheel_radius);
   w3->mSuspensionMinLength = wheel_radius;
   w3->mSuspensionMaxLength = 2 * wheel_radius;
+  w3->mAngularDamping = 0.0f;
   w3->mMaxSteerAngle = 0.0f;
   w3->mRadius = wheel_radius;
   w3->mWidth = wheel_width;
