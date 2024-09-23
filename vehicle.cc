@@ -360,7 +360,7 @@ int main(void)
   physics_system.SetGravity(Vec3(0, -0.4, 0));
   BodyInterface &body_interface = physics_system.GetBodyInterface();
 
-  BoxShapeSettings ground_shape_settings(Vec3(3.0, 0.1, 3.0));
+  BoxShapeSettings ground_shape_settings(Vec3(2000.0, 0.1, 2000.0));
   ground_shape_settings.mConvexRadius = 0.001;
   ground_shape_settings.SetEmbedded();
   ShapeSettings::ShapeResult ground_shape_result = ground_shape_settings.Create();
@@ -419,7 +419,7 @@ int main(void)
   WheeledVehicleController *vehicle_controller = static_cast<WheeledVehicleController *>(constraint->GetController());
   vehicle_controller->SetDriverInput(0.0f, 0.0f, 0.0f, 0.0f);
 
-  body_interface.SetLinearVelocity(car_body->GetID(), Vec3(0.0f, 0.0f, 0.2f));
+  body_interface.SetLinearVelocity(car_body->GetID(), Vec3(0.0f, 0.0f, 2.0f));
 
   double t = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
@@ -433,10 +433,14 @@ int main(void)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idx_body);
     RMat44 transform = body_interface.GetWorldTransform(car_body->GetID());
     RVec3 position = transform.GetTranslation();
+    double pz = position.GetZ();
+    while (pz >= 1.0)
+      pz -= 2.0;
+    double dz = pz - position.GetZ();
     Vec3 x = transform.GetAxisX();
     Vec3 y = transform.GetAxisY();
     Vec3 z = transform.GetAxisZ();
-    float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)position.GetZ()};
+    float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)(position.GetZ() + dz)};
     glUniform3fv(glGetUniformLocation(program_body, "translation"), 1, translation);
     float rotation[9] = {x.GetX(), y.GetX(), z.GetX(), x.GetY(), y.GetY(), z.GetY(), x.GetZ(), y.GetZ(), z.GetZ()};
     glUniformMatrix3fv(glGetUniformLocation(program_body, "rotation"), 1, GL_TRUE, rotation);
@@ -452,7 +456,7 @@ int main(void)
       Vec3 x = transform.GetAxisX();
       Vec3 y = transform.GetAxisY();
       Vec3 z = transform.GetAxisZ();
-      float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)position.GetZ()};
+      float translation[3] = {(float)position.GetX(), (float)position.GetY(), (float)(position.GetZ() + dz)};
       glUniform3fv(glGetUniformLocation(program_wheel, "translation"), 1, translation);
       float rotation[9] = {x.GetX(), y.GetX(), z.GetX(), x.GetY(), y.GetY(), z.GetY(), x.GetZ(), y.GetZ(), z.GetZ()};
       glUniformMatrix3fv(glGetUniformLocation(program_wheel, "rotation"), 1, GL_TRUE, rotation);
