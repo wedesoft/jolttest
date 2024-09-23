@@ -51,6 +51,15 @@ export LD_LIBRARY_PATH=/usr/local/lib
 ./suspension
 ```
 
+### Vehicle
+
+WIP
+
+```Shell
+export LD_LIBRARY_PATH=/usr/local/lib
+./vehicle
+```
+
 [1]: https://github.com/jrouwe/JoltPhysics
 [2]: https://github.com/jrouwe/JoltPhysics/blob/master/Build/README.md
 [3]: https://www.glfw.org/
