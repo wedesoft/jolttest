@@ -225,7 +225,7 @@ void handleLinkError(const char *step, GLuint program)
 int main(void)
 {
   glfwInit();
-  GLFWwindow *window = glfwCreateWindow(width, height, "Falling stack of boxes with Jolt Physics", NULL, NULL);
+  GLFWwindow *window = glfwCreateWindow(width, height, "Wheeled vehicle with Jolt Physics", NULL, NULL);
   glfwMakeContextCurrent(window);
   glewInit();
 
@@ -235,7 +235,7 @@ int main(void)
   const float half_vehicle_length = 0.15f;
   const float half_vehicle_width = 0.1f;
   const float half_vehicle_height = 0.02f;
-  const float max_steering_angle = DegreesToRadians(30.0f);
+  // const float max_steering_angle = DegreesToRadians(30.0f);
 
   glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
   glViewport(0, 0, width, height);
@@ -385,7 +385,7 @@ int main(void)
   w1->mSuspensionMinLength = wheel_radius;
   w1->mSuspensionMaxLength = 2 * wheel_radius;
   w1->mAngularDamping = 0.0f;
-  w1->mMaxSteerAngle = max_steering_angle;
+  w1->mMaxSteerAngle = 0.0f; // max_steering_angle;
   w1->mMaxHandBrakeTorque = 0.0f;
   w1->mRadius = wheel_radius;
   w1->mWidth = wheel_width;
@@ -424,7 +424,7 @@ int main(void)
   WheeledVehicleController *vehicle_controller = static_cast<WheeledVehicleController *>(constraint->GetController());
   vehicle_controller->SetDriverInput(0.0f, 0.0f, 0.0f, 0.0f);
 
-  body_interface.SetLinearVelocity(car_body->GetID(), Vec3(0.0f, 0.0f, 2.0f));
+  body_interface.SetLinearVelocity(car_body->GetID(), Vec3(0.0f, 0.0f, 3.0f));
 
   double t = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
