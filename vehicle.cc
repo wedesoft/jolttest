@@ -387,6 +387,7 @@ int main(void)
   w1->mAngularDamping = 0.0f;
   w1->mMaxSteerAngle = 0.0f; // max_steering_angle;
   w1->mMaxHandBrakeTorque = 0.0f;
+  w1->mInertia = 0.01;
   w1->mRadius = wheel_radius;
   w1->mWidth = wheel_width;
 
@@ -396,6 +397,7 @@ int main(void)
   w2->mSuspensionMaxLength = 2 * wheel_radius;
   w2->mAngularDamping = 0.0f;
   w2->mMaxSteerAngle = 0.0f;
+  w2->mInertia = 0.01;
   w2->mRadius = wheel_radius;
   w2->mWidth = wheel_width;
 
@@ -405,6 +407,7 @@ int main(void)
   w3->mSuspensionMaxLength = 2 * wheel_radius;
   w3->mAngularDamping = 0.0f;
   w3->mMaxSteerAngle = 0.0f;
+  w3->mInertia = 0.01;
   w3->mRadius = wheel_radius;
   w3->mWidth = wheel_width;
 
