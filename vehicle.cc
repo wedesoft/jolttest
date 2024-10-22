@@ -387,7 +387,7 @@ int main(void)
   w1->mAngularDamping = 0.0f;
   w1->mMaxSteerAngle = 0.0f; // max_steering_angle;
   w1->mMaxHandBrakeTorque = 0.0f;
-  w1->mInertia = 0.01;
+  w1->mInertia = 0.1;
   w1->mRadius = wheel_radius;
   w1->mWidth = wheel_width;
 
@@ -397,7 +397,7 @@ int main(void)
   w2->mSuspensionMaxLength = 2 * wheel_radius;
   w2->mAngularDamping = 0.0f;
   w2->mMaxSteerAngle = 0.0f;
-  w2->mInertia = 0.01;
+  w2->mInertia = 0.1;
   w2->mRadius = wheel_radius;
   w2->mWidth = wheel_width;
 
@@ -407,7 +407,7 @@ int main(void)
   w3->mSuspensionMaxLength = 2 * wheel_radius;
   w3->mAngularDamping = 0.0f;
   w3->mMaxSteerAngle = 0.0f;
-  w3->mInertia = 0.01;
+  w3->mInertia = 0.1;
   w3->mRadius = wheel_radius;
   w3->mWidth = wheel_width;
 
@@ -428,6 +428,7 @@ int main(void)
   vehicle_controller->SetDriverInput(0.0f, 0.0f, 0.0f, 0.0f);
 
   body_interface.SetLinearVelocity(car_body->GetID(), Vec3(0.0f, 0.0f, 3.0f));
+  body_interface.SetAngularVelocity(car_body->GetID(), Vec3(0.015, 0.0, 0.25));
 
   double t = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
