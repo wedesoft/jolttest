@@ -286,6 +286,7 @@ int main(void)
     body_settings.mApplyGyroscopicForce = true;
     body_settings.mLinearDamping = 0.0;
     body_settings.mAngularDamping = 0.0;
+    body_settings.mMotionQuality = EMotionQuality::LinearCast;
     Body *body = body_interface.CreateBody(body_settings);
     body->SetFriction(0.5);
     body->SetRestitution(0.3f);

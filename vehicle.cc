@@ -377,6 +377,7 @@ int main(void)
   car_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
   car_body_settings.mLinearDamping = 0.0;
   car_body_settings.mAngularDamping = 0.0;
+  car_body_settings.mMotionQuality = EMotionQuality::LinearCast;
 
   VehicleConstraintSettings vehicle;
 
