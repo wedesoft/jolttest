@@ -5,18 +5,23 @@ all: tumble pendulum stack suspension vehicle
 
 tumble: tumble.o
 	g++ -o $@ $^ $(LDFLAGS)
+	strip $@
 
 pendulum: pendulum.o
 	g++ -o $@ $^ $(LDFLAGS)
+	strip $@
 
 stack: stack.o
 	g++ -o $@ $^ $(LDFLAGS)
+	strip $@
 
 suspension: suspension.o
 	g++ -o $@ $^ $(LDFLAGS)
+	strip $@
 
 vehicle: vehicle.o
 	g++ -o $@ $^ $(LDFLAGS)
+	strip $@
 
 clean:
 	rm -f tumble pendulum stack suspension vehicle *.o
