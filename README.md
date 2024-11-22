@@ -4,7 +4,17 @@ Simple examples to test the capabilities of Jolt (built under GNU/Linux).
 
 ### Dependencies
 
-You need to install [Jolt][1] version 5.1.0.
+You need to build [Jolt][1] version 5.1.0 with double precision as follows:
+
+```Shell
+cd Build
+./cmake_linux_clang_gcc.sh Release g++ -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DDOUBLE_PRECISION=ON \
+    -DDEBUG_RENDERER_IN_DEBUG_AND_RELEASE=OFF -DPROFILER_IN_DEBUG_AND_RELEASE=OFF
+cd Linux_Release
+make -j `nproc`
+sudo make install
+cd ../..
+```
 
 Further, you need to install [GLFW][3] and [GLEW][4] for visualisation.
 
