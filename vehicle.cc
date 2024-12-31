@@ -481,10 +481,13 @@ int main(void)
   }
 
   physics_system.RemoveStepListener(constraint);
+  physics_system.RemoveConstraint(constraint);
 
   // destruct
   body_interface.RemoveBody(car_body->GetID());
   body_interface.RemoveBody(ground->GetID());
+
+  delete controller;
 
   UnregisterTypes();
   delete Factory::sInstance;
