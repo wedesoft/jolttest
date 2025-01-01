@@ -488,6 +488,9 @@ int main(void)
   body_interface.RemoveBody(ground->GetID());
 
   delete controller;
+  delete w1;
+  delete w2;
+  delete w3;
 
   UnregisterTypes();
   delete Factory::sInstance;
