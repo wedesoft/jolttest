@@ -339,7 +339,7 @@ int main(void)
     };
     glfwSwapBuffers(window);
     glfwPollEvents();
-    const int cCollisionSteps = 1;
+    const int cCollisionSteps = 10;
     physics_system.Update(dt, cCollisionSteps, &temp_allocator, &job_system);
     t += dt;
   }
