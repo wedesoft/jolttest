@@ -1,6 +1,7 @@
-## Chronotest
+## Getting started with Jolt Physics Engine
 
 Simple examples to test the capabilities of Jolt (built under GNU/Linux).
+Also see [corresponding article](https://www.wedesoft.de/simulation/2024/09/26/jolt-physics-engine/).
 
 ### Dependencies
 
