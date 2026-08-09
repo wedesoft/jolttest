@@ -5,7 +5,7 @@ Also see [corresponding article](https://www.wedesoft.de/simulation/2024/09/26/j
 
 ### Dependencies
 
-You need to build [Jolt][1] version 5.1.0 with double precision as follows:
+You need to build [Jolt][1] version 5.5.0 with double precision as follows:
 
 ```Shell
 cd Build
